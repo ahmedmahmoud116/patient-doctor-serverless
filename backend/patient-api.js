@@ -12,7 +12,7 @@ class PatientAPI extends DataSource {
     // Get list of all patients from DynamoDB table
     async getAllPatients() {
         const params = {
-            TableName: 'patientTable',
+            TableName: 'doctorTable',
         };
 
         const docClient = new AWS.DynamoDB.DocumentClient();
@@ -21,7 +21,7 @@ class PatientAPI extends DataSource {
 
         do {
             items = await docClient.scan(params).promise();
-            items.Items.forEach((item) => results.push(item));
+            items.Items.forEach((item) => {if(!item.specialization) results.push(item);});
             params.ExclusiveStartKey = items.LastEvaluatedKey;
         } while (typeof items.LastEvaluatedKey !== 'undefined');
 
@@ -29,34 +29,59 @@ class PatientAPI extends DataSource {
     }
 
     // Get a specific patient from the DynamoDB table, provided a patient's id
-    async getPatient(id) {
+    async getPatient(doctor_id, patient_id) {
+        // const params = {
+        //     TableName: 'doctorTable',
+        //     Key: {
+        //         "pk": "DOC#" + doctor_id,
+        //         "sk": "PAT#" + patient_id
+        //     },
+        // };
+
         const params = {
-            TableName: 'patientTable',
-            Key: {
-                id: id,
+            RequestItems: {
+                'doctorTable': {
+                    Keys: [
+                        {
+                            "pk": "DOC#" + doctor_id,
+                            "sk": "PAT#" + patient_id
+                        },
+                        {
+                            "pk": "DOC#" + doctor_id,
+                            "sk": "DOC#" + doctor_id
+                        }
+                    ]
+                }
             }
         };
 
         const docClient = new AWS.DynamoDB.DocumentClient();
-        const getResult = await docClient.get(params).promise();
-
-        if (getResult.Item) {
-            return getResult.Item;
+        const getResult = await docClient.batchGet(params).promise();
+        // console.log("Get Result: " + JSON.stringify(getResult.Responses.doctorTable));
+        if (getResult.Responses.doctorTable) {
+            const patient = getResult.Responses.doctorTable[0];
+            const doctor = getResult.Responses.doctorTable[1];
+            patient.doctor = doctor;
+            return patient;
         } else {
             return new Error("Patient not found");
         }
     }
 
     // Add a new Patient to the DynamoDB
-    async addPatient(firstName, lastName, syndrome) {
+    async addPatient(firstName, lastName, syndrome, doctor_id) {
+        const id = uuidv4();
         const patient = {
-            id: uuidv4(),
+            pk: "DOC#" + doctor_id,
+            sk: "PAT#" + id,
             firstName: firstName,
             lastName: lastName,
-            syndrome: syndrome
+            syndrome: syndrome,
+            id: id,
+            doctor_id: doctor_id
         }
         const patientParams = {
-            TableName: "patientTable",
+            TableName: "doctorTable",
             Item: patient,
         };
 
@@ -83,6 +108,99 @@ class PatientAPI extends DataSource {
         }
     }
 
+    // Add a new Doctor to the DynamoDB
+    async addDoctor(firstName, lastName, specialization) {
+        const id = uuidv4();
+        const doctor = {
+            pk: "DOC#" + id,
+            sk: "DOC#" + id,
+            firstName: firstName,
+            lastName: lastName,
+            specialization: specialization,
+            id: id
+        }
+        const doctorParams = {
+            TableName: "doctorTable",
+            Item: doctor,
+        };
+
+        try {
+            const dynamodb = new AWS.DynamoDB.DocumentClient();
+            const putResult = await dynamodb.put(doctorParams).promise();
+
+            return {
+                code: 201,
+                success: true,
+                message: "Doctor successfully added",
+                patient: doctor,
+            }
+        } catch (putError) {
+            console.log("There was an error adding this doctor")
+            console.log("putError", putError)
+            console.log("doctorParams", doctorParams)
+            return {
+                code: 500,
+                success: false,
+                message: putError,
+                patient: null,
+            }
+        }
+    }
+
+    // Get list of all doctors from DynamoDB table
+    async getAllDoctors() {
+        const params = {
+            TableName: 'doctorTable'
+        };
+
+        const docClient = new AWS.DynamoDB.DocumentClient();
+        let results = [];
+        let items;
+
+        do {
+            items = await docClient.scan(params).promise();
+            items.Items.forEach((item) => {if(item.specialization) results.push(item);});
+            params.ExclusiveStartKey = items.LastEvaluatedKey;
+        } while (typeof items.LastEvaluatedKey !== 'undefined');
+
+        return results;
+    }
+
+    // Get a specific doctor from the DynamoDB table, provided a doctor's id
+    async getDoctor(id) {
+        // const params = {
+        //     TableName: 'doctorTable',
+        //     Key: {
+        //         pk: "DOC#" + id,
+        //     }
+        // };
+        const id_concat = "DOC#" + id;
+        // console.log("AAAAA: " + id_concat);
+        const params = {
+            TableName: "doctorTable",
+            KeyConditionExpression: '#doctorpk = :id_concat',
+            ExpressionAttributeNames:{
+              "#doctorpk" : "pk",
+            },
+            ExpressionAttributeValues:{
+              ":id_concat": id_concat
+            }
+          }
+
+        const docClient = new AWS.DynamoDB.DocumentClient();
+        const getResult = await docClient.query(params).promise();
+        
+        // console.log("Get Result: " + JSON.stringify(getResult));
+        if (getResult.Items) {
+            const doctor = getResult.Items[0];
+            const patientarr = getResult.Items.slice(1,getResult.Items.length)
+            doctor.patients = patientarr;
+            // console.log("Get Result after modifcation:" + JSON.stringify(doctor))
+            return doctor;
+        } else {
+            return new Error("Doctor not found");
+        }
+    }
     // async updatePatient(id, firstName, lastName, syndrome) {
     //     const docClient = new AWS.DynamoDB.DocumentClient();
     //     const patient = {
@@ -93,7 +211,7 @@ class PatientAPI extends DataSource {
     //     }
 
     //     const params = {
-    //         TableName: 'patientTable',
+    //         TableName: 'doctorTable',
     //         Key: {
     //             email: email,
     //         },

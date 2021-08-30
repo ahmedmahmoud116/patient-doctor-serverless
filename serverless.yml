@@ -12,7 +12,7 @@
 # Happy Coding!
 org: ahmedmahmoud
 app: myapp
-service: learning-project
+service: patient-doctor
 # app and org for use with dashboard.serverless.com
 #app: your-app-name
 #org: your-org-name
@@ -39,8 +39,8 @@ provider:
        - "dynamodb:Query"
        - "dynamodb:PutItem"
      Resource: 
-       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.patientTable}
-       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.patientTable}/index/email
+       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.doctorTable}
+       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.dynamodb.doctorTable}/index/email
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:PutObject"
@@ -69,11 +69,7 @@ functions:
     events:
       - http:
           path: graphql
-          method: get
-          cors: true
-      - http:
-          path: graphql
-          method: post
+          method: any
           cors: true
 
 #    The following are a few example events you can configure
@@ -119,23 +115,29 @@ functions:
 # you can add CloudFormation resource templates here
 plugins:
   - serverless-pseudo-parameters
+  - serverless-offline
 custom:
   dynamodb:
-    patientTable: ${self:service}-patientTable-${self:provider.stage}
+    doctorTable: ${self:service}-doctorTable-${self:provider.stage}
+
 
 resources:
   Resources:
-    patientTable:
+    doctorTable:
       Type: "AWS::DynamoDB::Table"
       DeletionPolicy: Retain
       Properties:
-        TableName: patientTable
+        TableName: doctorTable
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: pk
             KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
