@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery, gql } from '@apollo/client';
 import DoctorRow from './DoctorRow'
-
+import styled from "styled-components";
 
 const FETCH_ALL_DOCTORS = gql`
   query Doctor{
@@ -27,31 +27,37 @@ function FetchAllDoctors() {
     );
   })
 
+  const Button = styled.button`
+  background-color: #1e943d;
+  color: white;
+  font-size: 20px;
+  padding: 10px 60px;
+  border-radius: 5px;
+  margin: 10px 0px;
+  cursor: pointer;
+`;
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Specialization</th>
-          {/* <th>ID</th> */}
-        </tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Specialization</th>
+            {/* <th>ID</th> */}
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+      <Button onClick={event => window.location.href = "addDoctor/"}>
+        Add Doctor
+      </Button>
+    </div>
+
   );
 
 }
 
-// class All_Doctors extends Component {
-//   render() {
-//     return (
-//       <div>
-//         <h2>List Doctors</h2>
-//       </div>
-//     );
-//   }
-// }
 
 export default FetchAllDoctors;
