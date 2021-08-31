@@ -21,12 +21,6 @@ function FetchAllDoctors() {
 
 
   data.getAllDoctors.map((doctor) => {
-    // if (availableOnly && !customer.available) {
-    //   return;
-    // }
-    // if (customer.email.indexOf(searchText) === -1) {
-    //   return;
-    // }
     rows.push(
       <DoctorRow
         key={doctor.id} doctor={doctor} />
@@ -40,7 +34,7 @@ function FetchAllDoctors() {
         <tr>
           <th>First Name</th>
           <th>Last Name</th>
-          <th>specialization</th>
+          <th>Specialization</th>
           {/* <th>ID</th> */}
         </tr>
       </thead>

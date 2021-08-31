@@ -1,35 +1,30 @@
 import React, { Component } from 'react';
 import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, gql, useMutation } from '@apollo/client';
-import DoctorRow from './DoctorRow'
+import PatientRow from './PatientRow'
 
 
-const FETCH_ALL_DOCTORS = gql`
-  query Patient{
-    getAllDoctors {
-      firstName
-      lastName
-      specialization
-      id
-    }
-  }`;
+const FETCH_ALL_PATIENTS = gql`
+query Patient {
+  getAllPatients {
+    firstName
+    lastName
+    syndrome
+    id
+    doctor_id
+  }
+}`;
 
-function FetchAllDoctors() {
-  const { loading, error, data } = useQuery(FETCH_ALL_DOCTORS);
+function FetchAllPatients() {
+  const { loading, error, data } = useQuery(FETCH_ALL_PATIENTS);
   if (loading) return <p> Loading... </p>
   if (error) return <p> Error! </p>
   const rows = [];
 
 
-  data.getAllDoctors.map((doctor) => {
-    // if (availableOnly && !customer.available) {
-    //   return;
-    // }
-    // if (customer.email.indexOf(searchText) === -1) {
-    //   return;
-    // }
+  data.getAllPatients.map((patient) => {
     rows.push(
-      <DoctorRow
-        key={doctor.id} doctor={doctor} />
+      <PatientRow
+        key={patient.id} patient={patient} />
     );
   })
 
@@ -40,8 +35,9 @@ function FetchAllDoctors() {
         <tr>
           <th>First Name</th>
           <th>Last Name</th>
-          <th>specialization</th>
+          <th>Syndrome</th>
           {/* <th>ID</th> */}
+          {/* <th>Doctor ID</th> */}
         </tr>
       </thead>
       <tbody>{rows}</tbody>
@@ -60,4 +56,4 @@ function FetchAllDoctors() {
 //   }
 // }
 
-export default FetchAllDoctors;
+export default FetchAllPatients;
