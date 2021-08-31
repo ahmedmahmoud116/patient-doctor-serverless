@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { ApolloClient, InMemoryCache, ApolloProvider, useQuery, gql, useMutation } from '@apollo/client';
+import React from 'react';
+import { useQuery, gql } from '@apollo/client';
 import DoctorRow from './DoctorRow'
 
 
