@@ -2,6 +2,7 @@ import React from 'react';
 
 export default class PatientRow extends React.Component {
     render() {
+        console.log("props: " + this.props.patient);
         return (
             <tr>
                 <td>{this.props.patient.firstName}</td>

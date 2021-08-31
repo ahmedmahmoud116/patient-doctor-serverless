@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import Home from './components/Home';
 import All_Patients from './components/All_Patients';
 import All_Doctors from './components/All_Doctors';
-
+import Doctor from './components/Doctor'
 
 function App() {
     return (
@@ -23,6 +23,7 @@ function App() {
                     <Route exact path='/' component={Home} />
                     <Route path='/AllPatients' component={All_Patients} />
                     <Route path='/AllDoctors' component={All_Doctors} />
+                    <Route path='/Doctor/:id' component={Doctor} />
                 </Switch>
             </div>
         </BrowserRouter>
